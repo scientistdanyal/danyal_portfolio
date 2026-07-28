@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 # Deployment entrypoint for engineerdanyal.com
+# Builds new images FIRST (old containers keep serving), then swaps them.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/docker/docker-compose.yml"
 ENV_FILE="${ROOT_DIR}/.env"
 
-# shellcheck disable=SC1091
-set -a
-# Load ports for health check URL
-# Prefer .env if present
+BACKEND_PORT=4000
+FRONTEND_PORT=3000
 if [[ -f "${ENV_FILE}" ]]; then
-  # Export selected vars without sourcing secrets into the shell history via set -x
   BACKEND_PORT="$(grep -E '^BACKEND_PORT=' "${ENV_FILE}" | tail -1 | cut -d= -f2- || true)"
+  FRONTEND_PORT="$(grep -E '^FRONTEND_PORT=' "${ENV_FILE}" | tail -1 | cut -d= -f2- || true)"
 fi
 BACKEND_PORT="${BACKEND_PORT:-4000}"
-set +a
+FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 
 log() {
   echo "[run.sh] $*"
@@ -40,8 +39,15 @@ if ! command -v docker >/dev/null 2>&1; then
   fail "Docker is not installed"
 fi
 
-log "Building and starting containers..."
-docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" up -d --build
+COMPOSE=(docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}")
+
+# 1) Build while old containers (if any) keep answering Nginx → no long 502 window
+log "Building images (site stays up if already running)..."
+"${COMPOSE[@]}" build
+
+# 2) Recreate/start with new images — brief cutover only
+log "Starting / swapping containers..."
+"${COMPOSE[@]}" up -d --remove-orphans
 
 log "Waiting for backend health on 127.0.0.1:${BACKEND_PORT}..."
 ATTEMPTS=60
@@ -52,11 +58,20 @@ for ((i = 1; i <= ATTEMPTS; i++)); do
   fi
   if [[ "${i}" -eq "${ATTEMPTS}" ]]; then
     log "Backend logs (last 80 lines):"
-    docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" logs --tail=80 backend || true
+    "${COMPOSE[@]}" logs --tail=80 backend || true
     fail "Backend health check failed after ${ATTEMPTS} attempts"
   fi
   sleep 2
 done
 
+# Ensure frontend is answering too
+for ((i = 1; i <= 30; i++)); do
+  if curl -sf "http://127.0.0.1:${FRONTEND_PORT}/" >/dev/null; then
+    log "Frontend healthy"
+    break
+  fi
+  sleep 2
+done
+
 log "Deployment complete"
-docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" ps
+"${COMPOSE[@]}" ps
