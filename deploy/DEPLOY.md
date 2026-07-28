@@ -16,6 +16,8 @@ Create A records pointing to the VPS IP (`64.177.119.157`):
 | `www` | A | `64.177.119.157` |
 | `api` | A | `64.177.119.157` |
 
+Confirm with `dig +short engineerdanyal.com` — it must return `64.177.119.157` before Certbot will succeed. (A GoDaddy/parking IP means DNS is not pointed at this VPS yet.)
+
 ## 1. Server packages
 
 ```bash
