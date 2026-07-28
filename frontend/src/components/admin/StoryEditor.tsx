@@ -6,7 +6,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { mediaUrl } from "@/lib/api";
+import { api, ApiError, mediaUrl } from "@/lib/api";
 import { formatCodeWithPrettier, detectCodeLanguage } from "@/lib/format-code";
 
 export type StoryBlock =
@@ -49,6 +49,11 @@ export function StoryEditor({ blocks, onChange }: Props) {
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [imageUrlPanel, setImageUrlPanel] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAfterIdRef = useRef<string | null>(null);
+  const replaceImageIdRef = useRef<string | null>(null);
   const [formattingId, setFormattingId] = useState<string | null>(null);
   const [formatNote, setFormatNote] = useState<string | null>(null);
   const selectionRef = useRef<SelectionSnap | null>(null);
@@ -154,6 +159,55 @@ export function StoryEditor({ blocks, onChange }: Props) {
     setMenuFor(null);
   }
 
+  function openImageUpload(afterId: string) {
+    setMenuFor(null);
+    setImageUrlPanel(null);
+    setUploadError(null);
+    uploadAfterIdRef.current = afterId;
+    replaceImageIdRef.current = null;
+    fileInputRef.current?.click();
+  }
+
+  function openReplaceImage(blockId: string) {
+    setUploadError(null);
+    uploadAfterIdRef.current = null;
+    replaceImageIdRef.current = blockId;
+    fileInputRef.current?.click();
+  }
+
+  async function onFileChosen(file: File | null) {
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    const fd = new FormData();
+    fd.append("image", file);
+    try {
+      const res = await api<{ url: string }>("/api/admin/uploads/image", {
+        method: "POST",
+        formData: fd,
+      });
+      const url = res.url;
+      if (!url) throw new Error("Upload returned no URL");
+
+      const replaceId = replaceImageIdRef.current;
+      const afterId = uploadAfterIdRef.current;
+      if (replaceId) {
+        updateBlock(replaceId, { url });
+      } else if (afterId) {
+        insertAfter(afterId, { id: uid(), type: "image", url, alt: "" });
+      }
+    } catch (err) {
+      setUploadError(
+        err instanceof ApiError ? err.message : "Image upload failed",
+      );
+    } finally {
+      setUploading(false);
+      uploadAfterIdRef.current = null;
+      replaceImageIdRef.current = null;
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   async function formatCodeBlock(blockId: string) {
     const block = blocks.find((b) => b.id === blockId);
     if (!block || block.type !== "code" || !block.code.trim()) return;
@@ -233,6 +287,23 @@ export function StoryEditor({ blocks, onChange }: Props) {
 
   return (
     <div className="relative" ref={rootRef}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={(e) => void onFileChosen(e.target.files?.[0] ?? null)}
+      />
+      {uploading ? (
+        <p className="mb-2 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-wider text-[var(--circuit-teal)]">
+          UPLOADING IMAGE…
+        </p>
+      ) : null}
+      {uploadError ? (
+        <p className="mb-2 font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-red-600">
+          {uploadError}
+        </p>
+      ) : null}
       <div className="space-y-1">
         {blocks.map((block) => {
           const controlsOpen =
@@ -286,6 +357,14 @@ export function StoryEditor({ blocks, onChange }: Props) {
                       onClick={() => applyInlineFormat(block.id, "*")}
                     >
                       <span className="w-4 italic">I</span> Italic
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full px-3 py-2.5 text-left text-sm text-[var(--ink)] hover:bg-[var(--ink)]/5"
+                      onClick={() => openImageUpload(block.id)}
+                    >
+                      Upload from PC
                     </button>
                     <button
                       type="button"
@@ -386,15 +465,23 @@ export function StoryEditor({ blocks, onChange }: Props) {
                     alt={block.alt ?? ""}
                     className="mx-auto max-h-[480px] w-full object-contain"
                   />
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <input
                       value={block.url}
                       onChange={(e) =>
                         updateBlock(block.id, { url: e.target.value })
                       }
-                      placeholder="Image URL"
-                      className="flex-1 border-0 border-b border-[var(--ink)]/15 bg-transparent py-1 text-sm text-[var(--ink)]/70 outline-none"
+                      placeholder="/uploads/images/…"
+                      className="min-w-0 flex-1 border-0 border-b border-[var(--ink)]/15 bg-transparent py-1 text-sm text-[var(--ink)]/70 outline-none"
                     />
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => openReplaceImage(block.id)}
+                      className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[var(--circuit-teal)] hover:underline disabled:opacity-50"
+                    >
+                      {uploading ? "UPLOADING…" : "UPLOAD"}
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeBlock(block.id)}
