@@ -1,0 +1,16 @@
+{
+  "name": "danyal-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "engineerdanyal.com — full-stack engineer portfolio monorepo",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:db": "docker compose -f docker/docker-compose.dev.yml --env-file .env up -d",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "lint": "npm --prefix frontend run lint && npm --prefix backend run lint",
+    "docker:up": "docker compose -f docker/docker-compose.yml --env-file .env up -d --build",
+    "docker:down": "docker compose -f docker/docker-compose.yml --env-file .env down"
+  }
+}

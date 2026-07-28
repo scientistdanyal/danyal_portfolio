@@ -1,0 +1,249 @@
+// Prisma schema modeled from sections.md
+// Nested/flexible fields (case study body, screenshots, code blocks) use
+// jsonb / String[] — Postgres alone is sufficient; no separate document DB.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SkillType {
+  language
+  framework
+  tool
+}
+
+enum ContractType {
+  full_time
+  part_time
+  contract
+  freelance
+  internship
+}
+
+/// Singleton-style profile for Home / About (Section 1).
+/// experience_summary / projects_summary are derived via Experience + Project.featured.
+model Profile {
+  id                String   @id @default(cuid())
+  name              String
+  title             String
+  image             String
+  shortDescription  String   @map("short_description")
+  longDescription   String   @map("long_description") @db.Text
+  location          String
+  resumeUrl         String?  @map("resume_url")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  education   Education[]
+  socialLinks SocialLink[]
+
+  @@map("profiles")
+}
+
+model Education {
+  id            String    @id @default(cuid())
+  institution   String
+  degree        String
+  fieldOfStudy  String?   @map("field_of_study")
+  startDate     DateTime  @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+  description   String?
+  sortOrder     Int       @default(0) @map("sort_order")
+  profileId     String    @map("profile_id")
+  profile       Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([profileId])
+  @@map("education")
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  platform  String
+  url       String
+  sortOrder Int      @default(0) @map("sort_order")
+  profileId String?  @map("profile_id")
+  profile   Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  /// Also reusable on Contact settings when profileId is null and contactSettingsId is set
+  contactSettingsId String?          @map("contact_settings_id")
+  contactSettings   ContactSettings? @relation(fields: [contactSettingsId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([profileId])
+  @@index([contactSettingsId])
+  @@map("social_links")
+}
+
+model SkillCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  sortOrder Int      @default(0) @map("sort_order")
+  skills    Skill[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("skill_categories")
+}
+
+model Skill {
+  id           String        @id @default(cuid())
+  name         String
+  type         SkillType
+  /// 1–100 for instrument-style proficiency bars
+  proficiency  Int
+  icon         String?
+  sortOrder    Int           @default(0) @map("sort_order")
+  categoryId   String        @map("category_id")
+  category     SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@index([categoryId])
+  @@map("skills")
+}
+
+model Certification {
+  id                 String   @id @default(cuid())
+  certificationName  String   @map("certification_name")
+  organization       String
+  dateCompleted      DateTime @map("date_completed") @db.Date
+  credentialUrl      String?  @map("credential_url")
+  image              String?
+  sortOrder          Int      @default(0) @map("sort_order")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("certifications")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  projectName String   @map("project_name")
+  url         String?
+  tagline     String
+  client      String?
+  coverImage  String   @map("cover_image")
+  techStack   String[] @map("tech_stack")
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  caseStudy CaseStudyDetails?
+
+  @@index([featured])
+  @@map("projects")
+}
+
+model CaseStudyDetails {
+  id               String   @id @default(cuid())
+  overview         String   @db.Text
+  problemStatement String?  @map("problem_statement") @db.Text
+  solution         String?  @db.Text
+  role             String?
+  duration         String?
+  screenshots      String[] @default([])
+  resultsImpact    String?  @map("results_impact") @db.Text
+  projectId        String   @unique @map("project_id")
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("case_study_details")
+}
+
+model Experience {
+  id               String       @id @default(cuid())
+  organizationName String       @map("organization_name")
+  roleTitle        String       @map("role_title")
+  contractType     ContractType @map("contract_type")
+  startDate        DateTime     @map("start_date") @db.Date
+  endDate          DateTime?    @map("end_date") @db.Date
+  location         String?
+  techStack        String[]     @map("tech_stack")
+  problem          String       @db.Text
+  solution         String       @db.Text
+  impact           String?      @db.Text
+  logo             String?
+  sortOrder        Int          @default(0) @map("sort_order")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  @@index([startDate])
+  @@map("experiences")
+}
+
+model Blog {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  abstract      String
+  /// Plain-text fallback / derived from paragraph blocks
+  summary       String   @default("") @db.Text
+  /// Medium-style body: [{ id, type: paragraph|image|code, ... }]
+  content       Json     @default("[]")
+  coverImage    String?  @map("cover_image")
+  images        String[] @default([])
+  /// Legacy; prefer content blocks. Kept for older posts.
+  codeSection   Json?    @map("code_section")
+  tags          String[] @default([])
+  publishedDate DateTime @map("published_date") @db.Date
+  readTime      String?  @map("read_time")
+  /// Spec typo "cateogory" normalized to category
+  category      String?
+  published     Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([publishedDate])
+  @@index([published])
+  @@map("blogs")
+}
+
+/// Site-level contact info (Section 6) — typically a single row.
+model ContactSettings {
+  id                 String   @id @default(cuid())
+  email              String
+  phone              String?
+  location           String?
+  contactFormEnabled Boolean  @default(true) @map("contact_form_enabled")
+  formFields         String[] @default(["name", "email", "message"]) @map("form_fields")
+  availabilityStatus String?  @map("availability_status")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  socialLinks SocialLink[]
+
+  @@map("contact_settings")
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([read])
+  @@map("contact_submissions")
+}
+
+/// Single-admin auth (Step 5) — included early so migrations stay linear.
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
