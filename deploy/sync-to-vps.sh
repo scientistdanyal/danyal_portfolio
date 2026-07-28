@@ -84,6 +84,9 @@ sudo -u "${REMOTE_USER}" -H bash -lc "cd '${REMOTE_DIR}' && ./run.sh"
 
 if sudo -u "${REMOTE_USER}" -H bash -lc "cd '${REMOTE_DIR}' && docker compose -f docker/docker-compose.yml --env-file .env ps --status running" | grep -q backend; then
   sudo -u "${REMOTE_USER}" -H bash -lc "cd '${REMOTE_DIR}' && docker compose -f docker/docker-compose.yml --env-file .env cp ./backend/uploads/. backend:/app/uploads/" || true
+  # docker cp preserves host UIDs; container runs as app (100:101)
+  docker exec -u root "$(cd "${REMOTE_DIR}" && docker compose -f docker/docker-compose.yml --env-file .env ps -q backend)" \
+    sh -c 'mkdir -p /app/uploads/images /app/uploads/resume && chown -R app:app /app/uploads && chmod -R u+rwX /app/uploads' || true
 fi
 
 # Install Nginx site only if missing. Never overwrite Certbot-managed SSL config.
