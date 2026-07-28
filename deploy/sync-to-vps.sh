@@ -86,12 +86,29 @@ if sudo -u "${REMOTE_USER}" -H bash -lc "cd '${REMOTE_DIR}' && docker compose -f
   sudo -u "${REMOTE_USER}" -H bash -lc "cd '${REMOTE_DIR}' && docker compose -f docker/docker-compose.yml --env-file .env cp ./backend/uploads/. backend:/app/uploads/" || true
 fi
 
+# Install Nginx site only if missing. Never overwrite Certbot-managed SSL config.
 if [[ -d /etc/nginx/sites-available ]]; then
-  cp "${REMOTE_DIR}/deploy/nginx/engineerdanyal.conf" /etc/nginx/sites-available/engineerdanyal
-  ln -sf /etc/nginx/sites-available/engineerdanyal /etc/nginx/sites-enabled/
-  rm -f /etc/nginx/sites-enabled/default
   mkdir -p /var/www/certbot
-  nginx -t && systemctl reload nginx || true
+  if [[ ! -f /etc/nginx/sites-available/engineerdanyal ]]; then
+    cp "${REMOTE_DIR}/deploy/nginx/engineerdanyal.conf" /etc/nginx/sites-available/engineerdanyal
+    ln -sf /etc/nginx/sites-available/engineerdanyal /etc/nginx/sites-enabled/
+    rm -f /etc/nginx/sites-enabled/default
+    nginx -t && systemctl reload nginx || true
+  elif ! grep -q 'ssl_certificate' /etc/nginx/sites-available/engineerdanyal; then
+    echo "[remote] Nginx site has no SSL — reinstalling base config (run certbot after)"
+    cp "${REMOTE_DIR}/deploy/nginx/engineerdanyal.conf" /etc/nginx/sites-available/engineerdanyal
+    ln -sf /etc/nginx/sites-available/engineerdanyal /etc/nginx/sites-enabled/
+    nginx -t && systemctl reload nginx || true
+  else
+    echo "[remote] Keeping existing Nginx SSL config (not overwriting)"
+  fi
+
+  # If certs exist but 443 is down, re-deploy certificates without touching HTTP-only template
+  if [[ -d /etc/letsencrypt/live/engineerdanyal.com ]] && ! ss -tln | grep -q ':443'; then
+    echo "[remote] Restoring Certbot SSL listeners on :443"
+    certbot --nginx -d engineerdanyal.com -d www.engineerdanyal.com -d api.engineerdanyal.com \
+      --redirect --agree-tos -m admin@engineerdanyal.com --non-interactive || true
+  fi
 fi
 
 curl -sf http://127.0.0.1:4000/api/health && echo
