@@ -15,33 +15,27 @@ export function ExperienceTimeline({
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-[var(--paper)]/70">No experience listed yet.</p>
+      <p className="text-sm text-[var(--fg-muted)]">No experience listed yet.</p>
     );
   }
 
   return (
-    <ol className="relative space-y-0 md:pl-0">
+    <ol className="space-y-0">
       {items.map((item, index) => {
         const open = openId === item.id;
         const end = item.endDate ? formatDate(item.endDate) : "Present";
         return (
           <li
             key={item.id}
-            className="grid gap-3 border-l border-[var(--blueprint-line)]/40 py-5 pl-5 md:grid-cols-[140px_1fr] md:gap-8 md:border-l-0 md:pl-0"
+            className="grid gap-4 border-b border-[var(--border)] py-8 first:pt-0 last:border-b-0 md:grid-cols-[180px_1fr] md:gap-10"
           >
-            <div className="mono text-xs text-[var(--blueprint-line)] md:pt-1">
-              <span className="md:hidden">
+            <div>
+              <span className="mono text-3xl font-bold text-[var(--bg-alt)]">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <p className="mono mt-2 text-[11px] text-[var(--fg-muted)]">
                 {formatDate(item.startDate)} — {end}
-              </span>
-              <span className="relative hidden md:block">
-                <span className="absolute -left-[1.35rem] top-1.5 h-2.5 w-2.5 rounded-full border border-[var(--blueprint-line)] bg-[var(--blueprint-navy)]" />
-                {index < items.length - 1 ? (
-                  <span className="absolute -left-[1.05rem] top-4 h-[calc(100%+1.25rem)] w-px bg-[var(--blueprint-line)]/40" />
-                ) : null}
-                {formatDate(item.startDate)}
-                <br />
-                {end}
-              </span>
+              </p>
             </div>
             <div>
               <button
@@ -50,44 +44,39 @@ export function ExperienceTimeline({
                 onClick={() => setOpenId(open ? null : item.id)}
                 aria-expanded={open}
               >
-                <h3 className="text-xl font-semibold tracking-tight">
+                <h3 className="text-xl font-bold tracking-tight">
                   {item.roleTitle}
                 </h3>
-                <p className="mt-1 text-sm text-[var(--paper)]/75">
+                <p className="mt-1 text-sm text-[var(--fg-muted)]">
                   {item.organizationName}
                   {item.location ? ` · ${item.location}` : ""}
                 </p>
-                <span className="mt-2 inline-block mono rounded border border-[var(--blueprint-line)]/40 px-2 py-0.5 text-[10px] text-[var(--blueprint-line)]">
+                <span className="tag mt-2 inline-block">
                   {formatContract(item.contractType)}
                 </span>
               </button>
 
               {(open || compact) && (
-                <div className="mt-4 space-y-3 text-sm leading-relaxed text-[var(--paper)]/80">
+                <div className="mt-5 space-y-4 text-sm leading-relaxed text-[var(--fg)]/80">
                   {!compact ? (
                     <>
-                      <p>
-                        <span className="mono text-[10px] text-[var(--signal-amber)]">
-                          PROBLEM
-                        </span>
-                        <br />
-                        {item.problem}
-                      </p>
-                      <p>
-                        <span className="mono text-[10px] text-[var(--signal-amber)]">
-                          SOLUTION
-                        </span>
-                        <br />
-                        {item.solution}
-                      </p>
+                      {item.problem ? (
+                        <div>
+                          <span className="mono text-[10px] font-semibold uppercase text-[var(--accent)]">Problem</span>
+                          <p className="mt-1">{item.problem}</p>
+                        </div>
+                      ) : null}
+                      {item.solution ? (
+                        <div>
+                          <span className="mono text-[10px] font-semibold uppercase text-[var(--accent)]">Solution</span>
+                          <p className="mt-1">{item.solution}</p>
+                        </div>
+                      ) : null}
                       {item.impact ? (
-                        <p>
-                          <span className="mono text-[10px] text-[var(--signal-amber)]">
-                            IMPACT
-                          </span>
-                          <br />
-                          {item.impact}
-                        </p>
+                        <div>
+                          <span className="mono text-[10px] font-semibold uppercase text-[var(--accent)]">Impact</span>
+                          <p className="mt-1">{item.impact}</p>
+                        </div>
                       ) : null}
                     </>
                   ) : (
@@ -95,12 +84,7 @@ export function ExperienceTimeline({
                   )}
                   <div className="flex flex-wrap gap-2 pt-1">
                     {item.techStack.map((tech) => (
-                      <span
-                        key={tech}
-                        className="tag mono rounded px-2 py-0.5 text-[10px]"
-                      >
-                        {tech}
-                      </span>
+                      <span key={tech} className="tag">{tech}</span>
                     ))}
                   </div>
                 </div>

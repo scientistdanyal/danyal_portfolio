@@ -14,16 +14,16 @@ export default async function ProjectsPage() {
 
   return (
     <Reveal>
-      <Plate label="FIG. 07 — PROJECTS" className="!pt-10 md:!pt-16">
-        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+      <Plate eyebrow="Projects" className="!pt-10 md:!pt-16">
+        <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
           Projects
         </h1>
-        <p className="mt-3 max-w-2xl text-[var(--paper)]/70">
-          Case studies and shipped work. Open a card for problem, solution, and results.
+        <p className="mt-3 max-w-2xl text-[var(--fg-muted)]">
+          Case studies and shipped work. Open a card for the full story.
         </p>
         <div className="mt-10">
           {projects.length === 0 ? (
-            <p className="text-sm text-[var(--paper)]/70">No projects yet.</p>
+            <p className="text-sm text-[var(--fg-muted)]">No projects yet.</p>
           ) : (
             <ProjectGrid projects={projects} />
           )}

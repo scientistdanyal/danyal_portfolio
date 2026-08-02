@@ -6,9 +6,11 @@ import { publicApi, type Project } from "@/lib/public-data";
 
 export function ProjectCard({
   project,
+  index,
   onOpen,
 }: {
   project: Project;
+  index: number;
   onOpen: (project: Project) => void;
 }) {
   const cover = mediaUrl(project.coverImage);
@@ -17,33 +19,42 @@ export function ProjectCard({
     <button
       type="button"
       onClick={() => onOpen(project)}
-      className="paper-card group w-full overflow-hidden text-left"
+      className="card group w-full overflow-hidden text-left"
     >
-      <div className="aspect-[16/10] bg-[var(--blueprint-navy)]/10">
+      <div className="aspect-[16/10] overflow-hidden bg-[var(--bg-alt)]">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="h-full w-full object-cover" />
+          <img
+            src={cover}
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         ) : (
-          <div className="flex h-full items-center justify-center mono text-[10px] text-[var(--ink)]/40">
+          <div className="flex h-full items-center justify-center mono text-[10px] text-[var(--fg-muted)]">
             NO COVER
           </div>
         )}
       </div>
       <div className="p-5">
-        <h3 className="text-lg font-semibold tracking-tight">
-          {project.projectName}
-        </h3>
-        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[var(--ink)]/75">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg font-semibold tracking-tight">
+            {project.projectName}
+          </h3>
+          <span className="mono mt-1 shrink-0 text-[11px] text-[var(--fg-muted)]">
+            ({String(index + 1).padStart(2, "0")})
+          </span>
+        </div>
+        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[var(--fg-muted)]">
           {project.tagline}
         </p>
         {project.client ? (
-          <p className="mt-2 mono text-[10px] text-[var(--ink)]/50">
+          <p className="mt-2 mono text-[10px] text-[var(--fg-muted)]">
             {project.client}
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
           {project.techStack.slice(0, 4).map((tech) => (
-            <span key={tech} className="tag mono rounded px-2 py-0.5 text-[10px]">
+            <span key={tech} className="tag">
               {tech}
             </span>
           ))}
@@ -81,43 +92,43 @@ export function ProjectModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 md:items-center md:p-6"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm md:items-center md:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onClick={onClose}
     >
       <div
-        className="max-h-[100dvh] w-full overflow-y-auto bg-[var(--paper)] text-[var(--ink)] md:max-h-[90vh] md:max-w-3xl md:rounded"
+        className="max-h-[100dvh] w-full overflow-y-auto rounded-t-2xl bg-white text-[var(--fg)] md:max-h-[90vh] md:max-w-3xl md:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-[var(--ink)]/10 bg-[var(--paper)] px-5 py-4">
-          <p className="mono text-[10px] tracking-widest text-[var(--ink)]/50">
-            CASE STUDY
+        <div className="sticky top-0 flex items-center justify-between border-b border-[var(--border)] bg-white px-6 py-4 md:rounded-t-2xl">
+          <p className="mono text-[11px] tracking-wider uppercase text-[var(--fg-muted)]">
+            Case Study
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="mono text-xs text-[var(--ink)]/70 hover:text-[var(--ink)]"
+            className="mono text-xs text-[var(--fg-muted)] transition hover:text-[var(--fg)]"
           >
-            CLOSE
+            CLOSE &times;
           </button>
         </div>
-        <div className="space-y-6 p-5 md:p-8">
+        <div className="space-y-6 p-6 md:p-8">
           <div>
             <h2
               id={titleId}
-              className="text-2xl font-semibold tracking-tight md:text-3xl"
+              className="text-2xl font-bold tracking-tight md:text-3xl"
             >
               {project.projectName}
             </h2>
-            <p className="mt-2 text-[var(--ink)]/75">{project.tagline}</p>
+            <p className="mt-2 text-[var(--fg-muted)]">{project.tagline}</p>
           </div>
 
           {study?.overview ? (
             <div>
-              <h3 className="mono text-[10px] tracking-widest text-[var(--ink)]/50">
-                OVERVIEW
+              <h3 className="mono text-[11px] tracking-wider uppercase text-[var(--fg-muted)]">
+                Overview
               </h3>
               <p className="mt-2 leading-relaxed">{study.overview}</p>
             </div>
@@ -125,8 +136,8 @@ export function ProjectModal({
 
           {study?.problemStatement ? (
             <div>
-              <h3 className="mono text-[10px] tracking-widest text-[var(--ink)]/50">
-                PROBLEM
+              <h3 className="mono text-[11px] tracking-wider uppercase text-[var(--fg-muted)]">
+                Problem
               </h3>
               <p className="mt-2 leading-relaxed">{study.problemStatement}</p>
             </div>
@@ -134,22 +145,22 @@ export function ProjectModal({
 
           {study?.solution ? (
             <div>
-              <h3 className="mono text-[10px] tracking-widest text-[var(--ink)]/50">
-                SOLUTION
+              <h3 className="mono text-[11px] tracking-wider uppercase text-[var(--fg-muted)]">
+                Solution
               </h3>
               <p className="mt-2 leading-relaxed">{study.solution}</p>
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-4 mono text-xs text-[var(--ink)]/70">
+          <div className="flex flex-wrap gap-4 mono text-xs text-[var(--fg-muted)]">
             {study?.role ? <span>Role: {study.role}</span> : null}
             {study?.duration ? <span>Duration: {study.duration}</span> : null}
           </div>
 
           {study?.resultsImpact ? (
             <div>
-              <h3 className="mono text-[10px] tracking-widest text-[var(--ink)]/50">
-                RESULTS
+              <h3 className="mono text-[11px] tracking-wider uppercase text-[var(--fg-muted)]">
+                Results
               </h3>
               <p className="mt-2 leading-relaxed">{study.resultsImpact}</p>
             </div>
@@ -166,7 +177,7 @@ export function ProjectModal({
                     key={shot}
                     src={src}
                     alt=""
-                    className="w-full rounded border border-[var(--ink)]/10"
+                    className="w-full rounded-xl border border-[var(--border)]"
                   />
                 );
               })}
@@ -175,12 +186,7 @@ export function ProjectModal({
 
           <div className="flex flex-wrap gap-2">
             {project.techStack.map((tech) => (
-              <span
-                key={tech}
-                className="tag mono rounded px-2 py-0.5 text-[10px]"
-              >
-                {tech}
-              </span>
+              <span key={tech} className="tag">{tech}</span>
             ))}
           </div>
 
@@ -189,9 +195,9 @@ export function ProjectModal({
               href={project.url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex mono text-xs tracking-wider text-[var(--circuit-teal)] hover:underline"
+              className="btn-primary inline-flex"
             >
-              VISIT LIVE SITE →
+              Visit Live Site &rarr;
             </a>
           ) : null}
         </div>
@@ -214,11 +220,12 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
 
   return (
     <>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => (
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {projects.map((project, i) => (
           <ProjectCard
             key={project.id}
             project={project}
+            index={i}
             onOpen={(p) => void onOpen(p)}
           />
         ))}

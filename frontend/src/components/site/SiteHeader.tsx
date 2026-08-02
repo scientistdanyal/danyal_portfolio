@@ -1,30 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 const LINKS = [
-  { href: "/", label: "Portfolio" },
+  { href: "/", label: "Home" },
   { href: "/skills", label: "Skills" },
   { href: "/projects", label: "Projects" },
   { href: "/experience", label: "Experience" },
   { href: "/blogs", label: "Blogs" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--blueprint-line)]/20 bg-[var(--blueprint-navy)]/90 backdrop-blur">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-4 md:px-6">
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg)]/90 backdrop-blur-md">
+      <div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 md:px-8">
         <Link
           href="/"
-          className="font-[family-name:var(--font-space-grotesk)] text-lg font-semibold tracking-tight text-[var(--paper)]"
+          className="font-[family-name:var(--font-space-grotesk)] text-lg font-bold tracking-tight"
         >
-          Engineer Danyal
+          Danyal<span className="text-[var(--accent)]">.</span>
         </Link>
-        <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+
+        <nav className="hidden items-center gap-6 md:flex">
           {LINKS.map((link) => {
             const active =
               link.href === "/"
@@ -34,18 +37,56 @@ export function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`mono text-[10px] tracking-wider uppercase transition md:text-xs ${
+                className={`text-sm transition-colors ${
                   active
-                    ? "text-[var(--signal-amber)]"
-                    : "text-[var(--paper)]/70 hover:text-[var(--paper)]"
+                    ? "font-medium text-[var(--fg)]"
+                    : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
                 }`}
               >
                 {link.label}
               </Link>
             );
           })}
+          <Link href="/contact" className="btn-primary text-[10px]">
+            Contact
+          </Link>
         </nav>
+
+        <button
+          type="button"
+          className="flex flex-col gap-1.5 md:hidden"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? "Close menu" : "Open menu"}
+        >
+          <span className={`block h-0.5 w-6 bg-[var(--fg)] transition-transform ${open ? "translate-y-2 rotate-45" : ""}`} />
+          <span className={`block h-0.5 w-6 bg-[var(--fg)] transition-opacity ${open ? "opacity-0" : ""}`} />
+          <span className={`block h-0.5 w-6 bg-[var(--fg)] transition-transform ${open ? "-translate-y-2 -rotate-45" : ""}`} />
+        </button>
       </div>
+
+      {open && (
+        <nav className="border-t border-[var(--border)] px-5 pb-6 pt-4 md:hidden">
+          <div className="flex flex-col gap-4">
+            {LINKS.map((link) => (
+              <button
+                key={link.href}
+                type="button"
+                className="text-left text-lg font-medium"
+                onClick={() => { setOpen(false); router.push(link.href); }}
+              >
+                {link.label}
+              </button>
+            ))}
+            <Link
+              href="/contact"
+              className="btn-primary mt-2 w-fit text-[10px]"
+              onClick={() => setOpen(false)}
+            >
+              Contact
+            </Link>
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

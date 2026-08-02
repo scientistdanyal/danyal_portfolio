@@ -28,7 +28,7 @@ function StoryBody({ blocks }: { blocks: ContentBlock[] }) {
           return (
             <p
               key={block.id}
-              className="whitespace-pre-line text-lg leading-relaxed text-[var(--paper)]/85 [&_em]:italic [&_strong]:font-semibold [&_strong]:text-[var(--paper)]"
+              className="whitespace-pre-line text-lg leading-relaxed text-[var(--fg)]/85 [&_em]:italic [&_strong]:font-semibold [&_strong]:text-[var(--fg)]"
               dangerouslySetInnerHTML={{
                 __html: renderInlineMarkdown(block.text),
               }}
@@ -44,10 +44,10 @@ function StoryBody({ blocks }: { blocks: ContentBlock[] }) {
               <img
                 src={src}
                 alt={block.alt ?? ""}
-                className="w-full border border-[var(--blueprint-line)]/20"
+                className="w-full rounded-xl border border-[var(--border)]"
               />
               {block.alt ? (
-                <figcaption className="mt-2 text-center mono text-[10px] text-[var(--blueprint-line)]">
+                <figcaption className="mt-2 text-center mono text-[11px] text-[var(--fg-muted)]">
                   {block.alt}
                 </figcaption>
               ) : null}
@@ -57,7 +57,7 @@ function StoryBody({ blocks }: { blocks: ContentBlock[] }) {
         return (
           <pre
             key={block.id}
-            className="overflow-x-auto border border-[var(--blueprint-line)]/30 bg-black/20 p-4 mono text-xs leading-relaxed text-[var(--blueprint-line)]"
+            className="overflow-x-auto rounded-xl bg-[var(--code-bg)] p-5 mono text-xs leading-relaxed text-[var(--code-fg)]"
           >
             <code>
               {`// ${block.language}\n`}
@@ -80,21 +80,27 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   return (
-    <Plate label="FIG. 09 — POST" className="!pt-10 md:!pt-16">
+    <Plate eyebrow="Blog" className="!pt-10 md:!pt-16">
       <Link
         href="/blogs"
-        className="mono text-[10px] tracking-wider text-[var(--blueprint-line)] hover:text-[var(--signal-amber)]"
+        className="mono text-[11px] tracking-wider text-[var(--fg-muted)] transition hover:text-[var(--fg)]"
       >
-        ← BACK TO BLOGS
+        &larr; Back to Blogs
       </Link>
-      <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-5xl">
+      <h1 className="mt-6 text-4xl font-bold tracking-tight md:text-5xl">
         {post.title}
       </h1>
-      <p className="mt-3 mono text-xs text-[var(--blueprint-line)]">
-        {formatDate(post.publishedDate)}
-        {post.readTime ? ` · ${post.readTime}` : ""}
-      </p>
-      <p className="mt-6 max-w-3xl text-lg text-[var(--paper)]/80">
+      <div className="mt-3 flex flex-wrap gap-3">
+        <span className="mono text-[11px] text-[var(--fg-muted)]">
+          {formatDate(post.publishedDate)}
+        </span>
+        {post.readTime ? (
+          <span className="mono text-[11px] text-[var(--fg-muted)]">
+            {post.readTime}
+          </span>
+        ) : null}
+      </div>
+      <p className="mt-6 max-w-3xl text-lg text-[var(--fg-muted)]">
         {post.abstract}
       </p>
       <StoryBody blocks={post.content ?? []} />

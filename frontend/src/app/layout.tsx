@@ -19,8 +19,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Engineer Danyal",
-    template: "%s · Engineer Danyal",
+    default: "Danyal — Full-Stack Engineer",
+    template: "%s · Danyal",
   },
   description: "Full-stack engineer portfolio — engineerdanyal.com",
 };

@@ -14,12 +14,13 @@ export default async function ContactPage() {
 
   return (
     <Reveal>
-      <Plate label="FIG. 10 — CONTACT" className="!pt-10 md:!pt-16">
-        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-          Contact
+      <Plate eyebrow="Contact" className="!pt-10 md:!pt-16">
+        <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
+          Let&apos;s Work Together
         </h1>
-        <p className="mt-3 max-w-2xl text-[var(--paper)]/70">
-          Send a direct message. No third-party form popups.
+        <p className="mt-3 max-w-2xl text-[var(--fg-muted)]">
+          Have a project in mind? Send a direct message — no popups, no
+          third-party forms.
         </p>
         <div className="mt-10">
           <ContactForm settings={settings} />

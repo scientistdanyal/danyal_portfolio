@@ -1,18 +1,22 @@
 export function Plate({
-  label,
+  eyebrow,
   children,
   className = "",
 }: {
-  label: string;
+  eyebrow?: string;
   children: React.ReactNode;
   className?: string;
+  /** @deprecated use eyebrow instead */
+  label?: string;
 }) {
   return (
     <section className={`py-16 md:py-24 ${className}`}>
-      <p className="mono text-[10px] tracking-[0.2em] text-[var(--blueprint-line)] md:text-xs">
-        {label}
-      </p>
-      <div className="mt-3 h-px w-full bg-[var(--blueprint-line)]/40" />
+      {eyebrow ? (
+        <p className="mono text-[11px] tracking-[0.15em] uppercase text-[var(--fg-muted)]">
+          {"// "}{eyebrow}
+        </p>
+      ) : null}
+      <div className="section-rule-strong mt-4" />
       <div className="mt-8 md:mt-10">{children}</div>
     </section>
   );

@@ -14,11 +14,11 @@ export default async function ExperiencePage() {
 
   return (
     <Reveal>
-      <Plate label="FIG. 08 — EXPERIENCE" className="!pt-10 md:!pt-16">
-        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
+      <Plate eyebrow="Experience" className="!pt-10 md:!pt-16">
+        <h1 className="text-4xl font-bold tracking-tight md:text-5xl">
           Experience
         </h1>
-        <p className="mt-3 max-w-2xl text-[var(--paper)]/70">
+        <p className="mt-3 max-w-2xl text-[var(--fg-muted)]">
           Roles, problems solved, and the stack used to ship them.
         </p>
         <div className="mt-10">
